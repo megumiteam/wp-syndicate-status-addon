@@ -1,0 +1,1 @@
+# wp-syndicate-status-addon
