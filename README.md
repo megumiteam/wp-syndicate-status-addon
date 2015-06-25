@@ -2,9 +2,9 @@
 ##
 [WP Syndicate](https://github.com/horike37/WP-Syndicate)プラグインのアドオンです。
 以下のstatusタグを仕様に基づいて処理します。
-* <status>create</status>:新規
-* <status>update</status>:更新
-* <status>delete</status>:削除
+* `<status>create</status>`:新規
+* `<status>update</status>`:更新
+* `<status>delete</status>`:削除
 
 ## 仕様
 ### 記事の新規投入処理
