@@ -6,12 +6,6 @@ class WSSA_Test extends WP_UnitTestCase {
 						'create-100' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/status/create-100.xml',
 						'update-100' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/status/update-100.xml',
 						'delete-100' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/status/delete-100.xml',
-						'create-200' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/status/create-200.xml',
-						'update-200' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/status/update-200.xml',
-						'delete-200' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/status/delete-200.xml',
-						'create-300' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/status/create-300.xml',
-						'update-300' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/status/update-300.xml',
-						'delete-300' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/status/delete-300.xml',
 						'no-status-100' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/status/no-status-100.xml',
 	);
 	
