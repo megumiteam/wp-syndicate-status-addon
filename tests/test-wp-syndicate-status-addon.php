@@ -4,6 +4,7 @@ class WSSA_Test extends WP_UnitTestCase {
 	private $action;
 	private $feed = array(
 						'create-100' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/status/create-100.xml',
+						'create-100-2' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/status/create-100-2.xml',
 						'update-100' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/status/update-100.xml',
 						'delete-100' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/status/delete-100.xml',
 						'no-status-100' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/status/no-status-100.xml',
@@ -31,8 +32,9 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'create-100', $post->post_title );
 		$this->assertEquals( 'publish', $post->post_status );
 		$this->assertEquals( 'create', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 
-		//updateステータスでの新規投稿：そのまま記事をインサートして公開
+		//updateステータスでの新規投稿：そのまま記事をインサートして公開 
 		$key = 'update';
 		$post_id = $this->factory->post->create(array('post_type' => 'wp-syndicate', 'post_name' => $key));
 		$this->add_post_meta($post_id, $this->feed['update-100']);
@@ -44,6 +46,7 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'update-100', $post->post_title );
 		$this->assertEquals( 'publish', $post->post_status );
 		$this->assertEquals( 'update', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 13:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 		
 		//deleteステータスでの新規投稿：無視
 		$key = 'delete';
@@ -68,13 +71,14 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'no-status-100', $post->post_title );
 		$this->assertEquals( 'publish', $post->post_status );
 		$this->assertEquals( 'update', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 15:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 	}
 
 	/**
 	 * @記事の更新処理（当該記事のステータスが「公開済み」の場合）
 	 */	
 	public function testUpdateForPublish() {
-		//記事を新規投入
+		//記事を新規投入 lastpubdate Fri, 26 Aug 2014 12:00:00 +0900
 		$key = 'testUpdateForPublish';
 		$post_id = $this->factory->post->create(array('post_type' => 'wp-syndicate', 'post_name' => $key));
 		$this->add_post_meta($post_id, $this->feed['create-100']);
@@ -86,8 +90,9 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'create-100', $post->post_title );
 		$this->assertEquals( 'publish', $post->post_status );
 		$this->assertEquals( 'create', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 		
-		//statusが'update'の場合 ⇒ そのまま記事を更新。
+		//statusが'update'の場合 ⇒ そのまま記事を更新。 lastpubdate Fri, 26 Aug 2014 13:00:00 +0900
 		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['update-100'] );
 		$this->action->import($post_id);
 		$posts = get_posts( array('posts_per_page' => 50) );
@@ -97,9 +102,10 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'update-100', $post->post_title );
 		$this->assertEquals( 'publish', $post->post_status );
 		$this->assertEquals( 'update', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 13:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 
-		//statusが'create'の場合 ⇒ 何もしない
-		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['create-100'] );
+		//statusが'create'の場合 ⇒ 何もしない lastpubdate Fri, 26 Aug 2014 14:00:00 +0900
+		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['create-100-2'] );
 		$this->action->import($post_id);
 		$posts = get_posts( array('posts_per_page' => 50) );
 		$post = get_page_by_path( sanitize_title($key.'_100'), OBJECT, 'post' );
@@ -107,9 +113,10 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 1, count($posts) );
 		$this->assertEquals( 'update-100', $post->post_title );
 		$this->assertEquals( 'publish', $post->post_status );
-		$this->assertEquals( 'update', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );		
+		$this->assertEquals( 'update', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 13:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );	
 		
-		//statusが'delete'の場合 ⇒ 記事のステータスを「非公開」に変更
+		//statusが'delete'の場合 ⇒ 記事のステータスを「非公開」に変更  lastpubdate Fri, 26 Aug 2014 14:00:00 +0900
 		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['delete-100'] );
 		$this->action->import($post_id);
 		$posts = get_posts( array('posts_per_page' => 50, 'post_status' => 'private') );
@@ -119,8 +126,9 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'update-100', $post->post_title );
 		$this->assertEquals( 'private', $post->post_status );
 		$this->assertEquals( 'delete', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 14:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 		
-		//記事を新規投入
+		//記事を新規投入  lastpubdate Fri, 26 Aug 2014 12:00:00 +0900
 		$key = 'testUpdateForPublish2';
 		$post_id = $this->factory->post->create(array('post_type' => 'wp-syndicate', 'post_name' => $key));
 		$this->add_post_meta($post_id, $this->feed['create-100']);
@@ -132,8 +140,9 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'create-100', $post->post_title );
 		$this->assertEquals( 'publish', $post->post_status );
 		$this->assertEquals( 'create', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 		
-		//statusが存在しない場合 ⇒ statusが'update'の場合と同様の処理
+		//statusが存在しない場合 ⇒ statusが'update'の場合と同様の処理  lastpubdate Fri, 26 Aug 2014 15:00:00 +0900
 		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['no-status-100'] );
 		$this->action->import($post_id);
 		$posts = get_posts( array('posts_per_page' => 50) );
@@ -143,13 +152,14 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'no-status-100', $post->post_title );
 		$this->assertEquals( 'publish', $post->post_status );
 		$this->assertEquals( 'update', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 15:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 	}
 
 	/**
 	 * @記事の更新処理（当該記事のステータスが「下書き(draft)」の場合）
 	 */	
 	public function testUpdateForDraft() {
-		//記事を新規投入
+		//記事を新規投入  lastpubdate Fri, 26 Aug 2014 12:00:00 +0900
 		$key = 'testUpdateForDraft';
 		$post_id = $this->factory->post->create(array('post_type' => 'wp-syndicate', 'post_name' => $key));
 		$this->add_post_meta($post_id, $this->feed['create-100']);
@@ -161,6 +171,7 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'create-100', $post->post_title );
 		$this->assertEquals( 'publish', $post->post_status );
 		$this->assertEquals( 'create', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 		
 		//記事を下書き(draft)へ変更
 		wp_update_post( array( 'ID' => $post->ID, 'post_title' => 'draft-100', 'post_status' => 'draft' ) );
@@ -170,9 +181,10 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 1, count($posts) );
 		$this->assertEquals( 'draft-100', $post->post_title );
 		$this->assertEquals( 'draft', $post->post_status );
+		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 		
-		//statusが'create'の場合 ⇒ 何もしない
-		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['create-100'] );
+		//statusが'create'の場合 ⇒ 何もしない  lastpubdate Fri, 26 Aug 2014 14:00:00 +0900
+		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['create-100-2'] );
 		$this->action->import($post_id);
 		$posts = get_posts( array('posts_per_page' => 50, 'post_status' => 'draft') );
 		$post = get_page_by_path( sanitize_title($key.'_100'), OBJECT, 'post' );
@@ -181,8 +193,9 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'draft-100', $post->post_title );
 		$this->assertEquals( 'draft', $post->post_status );
 		$this->assertEquals( 'create', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 
-		//statusが'update'の場合 ⇒ そのまま記事を更新。ただし記事ステータスは「下書き(draft)」のまま。
+		//statusが'update'の場合 ⇒ そのまま記事を更新。ただし記事ステータスは「下書き(draft)」のまま。  lastpubdate Fri, 26 Aug 2014 13:00:00 +0900
 		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['update-100'] );
 		$this->action->import($post_id);
 		$posts = get_posts( array('posts_per_page' => 50, 'post_status' => 'draft') );
@@ -192,8 +205,9 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'update-100', $post->post_title );
 		$this->assertEquals( 'draft', $post->post_status );
 		$this->assertEquals( 'update', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 13:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 
-		//statusが'delete'の場合 ⇒ 記事のステータスを「非公開」に変更
+		//statusが'delete'の場合 ⇒ 記事のステータスを「非公開」に変更  lastpubdate Fri, 26 Aug 2014 14:00:00 +0900
 		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['delete-100'] );
 		$this->action->import($post_id);
 		$posts = get_posts( array('posts_per_page' => 50, 'post_status' => 'private') );
@@ -203,8 +217,9 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'update-100', $post->post_title );
 		$this->assertEquals( 'private', $post->post_status );
 		$this->assertEquals( 'delete', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 14:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 		
-		//記事を新規投入
+		//記事を新規投入  lastpubdate Fri, 26 Aug 2014 12:00:00 +0900
 		$key = 'testUpdateForDraft2';
 		$post_id = $this->factory->post->create(array('post_type' => 'wp-syndicate', 'post_name' => $key));
 		$this->add_post_meta($post_id, $this->feed['create-100']);
@@ -216,8 +231,9 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'create-100', $post->post_title );
 		$this->assertEquals( 'publish', $post->post_status );
 		$this->assertEquals( 'create', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 		
-		//記事を下書き(draft)へ変更
+		//記事を下書き(draft)へ変更  
 		wp_update_post( array( 'ID' => $post->ID, 'post_title' => 'draft-100', 'post_status' => 'draft' ) );
 		$posts = get_posts( array('posts_per_page' => 50, 'post_status' => 'draft') );
 		$post = get_page_by_path( sanitize_title($key.'_100'), OBJECT, 'post' );
@@ -225,8 +241,9 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 1, count($posts) );
 		$this->assertEquals( 'draft-100', $post->post_title );
 		$this->assertEquals( 'draft', $post->post_status );
+		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 		
-		//statusが存在しない場合 ⇒ statusが'update'の場合と同様の処理
+		//statusが存在しない場合 ⇒ statusが'update'の場合と同様の処理 lastpubdate Fri, 26 Aug 2014 15:00:00 +0900
 		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['no-status-100'] );
 		$this->action->import($post_id);
 		$posts = get_posts( array('posts_per_page' => 50, 'post_status' => 'draft') );
@@ -236,13 +253,14 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'no-status-100', $post->post_title );
 		$this->assertEquals( 'draft', $post->post_status );
 		$this->assertEquals( 'update', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 15:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 	}
 
 	/**
 	 * @記事の更新処理（当該記事のステータスが「非公開(private)」の場合）
 	 */	
 	public function testUpdateForPrivate() {
-		//記事を新規投入
+		//記事を新規投入 lastpubdate Fri, 26 Aug 2014 12:00:00 +0900
 		$key = 'testUpdateForPrivate';
 		$post_id = $this->factory->post->create(array('post_type' => 'wp-syndicate', 'post_name' => $key));
 		$this->add_post_meta($post_id, $this->feed['create-100']);
@@ -254,6 +272,7 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'create-100', $post->post_title );
 		$this->assertEquals( 'publish', $post->post_status );
 		$this->assertEquals( 'create', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 		
 		//記事を非公開(private)へ変更
 		wp_update_post( array( 'ID' => $post->ID, 'post_title' => 'private-100', 'post_status' => 'private' ) );
@@ -263,8 +282,9 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 1, count($posts) );
 		$this->assertEquals( 'private-100', $post->post_title );
 		$this->assertEquals( 'private', $post->post_status );
+		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 		
-		//statusが'update'の場合 ⇒ 何もしない
+		//statusが'update'の場合 ⇒ 何もしない lastpubdate Fri, 26 Aug 2014 13:00:00 +0900
 		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['update-100'] );
 		$this->action->import($post_id);
 		$posts = get_posts( array('posts_per_page' => 50, 'post_status' => 'private') );
@@ -274,9 +294,10 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'private-100', $post->post_title );
 		$this->assertEquals( 'private', $post->post_status );
 		$this->assertEquals( 'create', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 
-		//statusが'create'の場合 ⇒ 何もしない
-		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['create-100'] );
+		//statusが'create'の場合 ⇒ 何もしない lastpubdate Fri, 26 Aug 2014 14:00:00 +0900
+		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['create-100-2'] );
 		$this->action->import($post_id);
 		$posts = get_posts( array('posts_per_page' => 50, 'post_status' => 'private') );
 		$post = get_page_by_path( sanitize_title($key.'_100'), OBJECT, 'post' );
@@ -285,8 +306,9 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'private-100', $post->post_title );
 		$this->assertEquals( 'private', $post->post_status );
 		$this->assertEquals( 'create', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 		
-		//statusが存在しない場合 ⇒ statusが'update'の場合と同様の処理
+		//statusが存在しない場合 ⇒ statusが'update'の場合と同様の処理 lastpubdate Fri, 26 Aug 2014 15:00:00 +0900
 		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['no-status-100'] );
 		$this->action->import($post_id);
 		$posts = get_posts( array('posts_per_page' => 50, 'post_status' => 'private') );
@@ -296,6 +318,7 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'private-100', $post->post_title );
 		$this->assertEquals( 'private', $post->post_status );
 		$this->assertEquals( 'create', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 	}
 
 	function add_post_meta( $post_id, $feed_url ) {
