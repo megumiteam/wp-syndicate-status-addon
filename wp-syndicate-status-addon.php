@@ -85,6 +85,14 @@ add_action( 'wp_syndicate_save_post', function( $update_post_id, $item ){
 //lastpubdaeタグのDBへの保存
 add_action( 'wp_syndicate_save_post', function( $update_post_id, $item ){
 	$lastpubdate = $item->get_item_tags('', 'lastpubdate');
+	if ( !is_array( $lastpubdate ) || count( $lastpubdate ) === 0 ) {
+		$lastpubdate = $item->get_item_tags('', 'lastpubDate');	
+	}
+
+	if ( !is_array( $lastpubdate ) || count( $lastpubdate ) === 0 ) {
+		$lastpubdate = $item->get_item_tags('', 'lastPubDate');	
+	}
+	
 	if ( is_array( $lastpubdate ) && count( $lastpubdate ) > 0 ) {
 		update_post_meta( $update_post_id, 'wp_syndicate_lastpubdate', $lastpubdate[0]['data'] );
 	} else {

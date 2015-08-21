@@ -9,6 +9,7 @@ class WSLP_Test extends WP_UnitTestCase {
 					'lastpubdate-4' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/lastpubdate/lastpubdate-4.xml',
 					'lastpubdate-5' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/lastpubdate/lastpubdate-5.xml',
 					'no-lastpubdate' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/lastpubdate/no-lastpubdate.xml',
+					'typo' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/lastpubdate/typo.xml'
 	);
 	
 	public function setUp() {
@@ -82,6 +83,24 @@ class WSLP_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'publish', $post->post_status );
 		$this->assertEquals( 'update', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
 		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:02 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
+	}
+	
+	/**
+	 * @lastPubDateでもlastpubDateでも取り込まれるテスト
+	 */
+	public function test_D_or_d() {
+		$key = 'lastpubdate';
+		$post_id = $this->factory->post->create(array('post_type' => 'wp-syndicate', 'post_name' => $key));
+		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['typo'] );
+		$this->action->import($post_id);
+		
+		$post = get_page_by_path( sanitize_title($key.'_typo-1'), OBJECT, 'post' );
+		$this->assertEquals( 'lastpubdate-typo-1', $post->post_title );
+		$this->assertEquals( 'Fri, 26 Aug 2014 12:30:02 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
+		
+		$post = get_page_by_path( sanitize_title($key.'_typo-2'), OBJECT, 'post' );
+		$this->assertEquals( 'lastpubdate-typo-2', $post->post_title );
+		$this->assertEquals( 'Fri, 26 Aug 2014 15:00:02 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 	}
 
 	function add_post_meta( $post_id, $feed_url ) {
