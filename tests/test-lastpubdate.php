@@ -88,7 +88,7 @@ class WSLP_Test extends WP_UnitTestCase {
 	/**
 	 * @lastPubDateでもlastpubDateでも取り込まれるテスト
 	 */
-	public function test_D_or_d() {
+	public function test_D_or_P() {
 		$key = 'lastpubdate';
 		$post_id = $this->factory->post->create(array('post_type' => 'wp-syndicate', 'post_name' => $key));
 		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['typo'] );
