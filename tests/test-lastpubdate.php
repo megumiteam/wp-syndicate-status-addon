@@ -9,7 +9,8 @@ class WSLP_Test extends WP_UnitTestCase {
 					'lastpubdate-4' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/lastpubdate/lastpubdate-4.xml',
 					'lastpubdate-5' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/lastpubdate/lastpubdate-5.xml',
 					'no-lastpubdate' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/lastpubdate/no-lastpubdate.xml',
-					'typo' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/lastpubdate/typo.xml'
+					'typo' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/lastpubdate/typo.xml',
+					'validation' => 'https://raw.githubusercontent.com/horike37/wp-syndicate-test-data/master/lastpubdate/validation.xml',
 	);
 	
 	public function setUp() {
@@ -101,6 +102,37 @@ class WSLP_Test extends WP_UnitTestCase {
 		$post = get_page_by_path( sanitize_title($key.'_typo-2'), OBJECT, 'post' );
 		$this->assertEquals( 'lastpubdate-typo-2', $post->post_title );
 		$this->assertEquals( 'Fri, 26 Aug 2014 15:00:02 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
+	}
+
+	/**
+	 * @lastPubDateのバリデーションチェック
+	 * - 未来の日付の場合は現在日付を登録
+	 * - lastpubdateが存在しないまたはlastpubdateが空の場合は現在日付を登録
+	 * - lastpubdateの日付のフォーマットがおかしければ現在日付を登録
+	 */
+	public function test_validation() {
+		$key = 'lastpubdate';
+		$post_id = $this->factory->post->create(array('post_type' => 'wp-syndicate', 'post_name' => $key));
+		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['validation'] );
+		$this->action->import($post_id);
+		
+		$now_date = mysql2date('D, d M Y H:i:s +0900', date_i18n('Y-m-d H:i:s'), false);
+		$post = get_page_by_path( sanitize_title($key.'_validate-1'), OBJECT, 'post' );
+		$this->assertEquals( 'lastpubdate-validate-1', $post->post_title );
+		$this->assertEquals( $now_date, get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
+		
+		$post = get_page_by_path( sanitize_title($key.'_validate-2'), OBJECT, 'post' );
+		$this->assertEquals( 'lastpubdate-validate-2', $post->post_title );
+		$this->assertEquals( $now_date, get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
+		
+		$post = get_page_by_path( sanitize_title($key.'_validate-3'), OBJECT, 'post' );
+		$this->assertEquals( 'lastpubdate-validate-3', $post->post_title );
+		$this->assertEquals( $now_date, get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
+		
+		$post = get_page_by_path( sanitize_title($key.'_validate-4'), OBJECT, 'post' );
+		$this->assertEquals( 'lastpubdate-validate-4', $post->post_title );
+		$this->assertEquals( $now_date, get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
+
 	}
 
 	function add_post_meta( $post_id, $feed_url ) {
