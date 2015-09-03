@@ -35,7 +35,8 @@ add_filter( 'wp_syndicate_is_skip', function( $is_skip, $item, $updated, $set_po
 		}
 	}
 
-	$lastpubdate = $item->get_item_tags('', 'lastpubdate');
+	$lastpubdate = wpsystad_get_lastpubdate($item);
+
 	if ( $updated ) {
 		if ( is_array( $lastpubdate ) && count( $lastpubdate ) > 0 && !empty($lastpubdate[0]['data']) ) {
 			$lastpuddate_single = get_post_meta( $set_post_id, 'wp_syndicate_lastpubdate', true );
@@ -84,14 +85,7 @@ add_action( 'wp_syndicate_save_post', function( $update_post_id, $item ){
 
 //lastpubdaeタグのDBへの保存
 add_action( 'wp_syndicate_save_post', function( $update_post_id, $item ){
-	$lastpubdate = $item->get_item_tags('', 'lastpubdate');
-	if ( !is_array( $lastpubdate ) || count( $lastpubdate ) === 0 ) {
-		$lastpubdate = $item->get_item_tags('', 'lastpubDate');	
-	}
-
-	if ( !is_array( $lastpubdate ) || count( $lastpubdate ) === 0 ) {
-		$lastpubdate = $item->get_item_tags('', 'lastPubDate');	
-	}
+	$lastpubdate = wpsystad_get_lastpubdate($item);
 	
 	if ( is_array( $lastpubdate ) && count( $lastpubdate ) > 0 
 		&& !empty($lastpubdate[0]['data']) && strptime( $lastpubdate[0]['data'], '%a, %d %b %Y %H:%M:%S +0900' ) 
@@ -102,3 +96,15 @@ add_action( 'wp_syndicate_save_post', function( $update_post_id, $item ){
 	}
 	
 }, 10, 2 );
+
+function wpsystad_get_lastpubdate($item) {
+	$lastpubdate = $item->get_item_tags('', 'lastpubdate');
+	if ( !is_array( $lastpubdate ) || count( $lastpubdate ) === 0 ) {
+		$lastpubdate = $item->get_item_tags('', 'lastpubDate');	
+	}
+
+	if ( !is_array( $lastpubdate ) || count( $lastpubdate ) === 0 ) {
+		$lastpubdate = $item->get_item_tags('', 'lastPubDate');	
+	}
+	return $lastpubdate;
+}
