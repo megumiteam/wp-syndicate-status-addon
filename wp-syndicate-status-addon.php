@@ -27,10 +27,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 add_filter( 'wp_syndicate_is_skip', function( $is_skip, $item, $updated, $set_post_id ){
 	
-	//更新対象の記事が非公開であれば一切の更新を受け付けない
+	//更新対象の記事が非公開及びゴミ箱であれば一切の更新を受け付けない
 	if ( $updated ) {
 		$post = get_post($set_post_id);
-		if ( !empty($post) && is_object($post) && $post->post_status == 'private' ) {
+		if ( !empty($post) && is_object($post) && ( $post->post_status === 'private' || $post->post_status === 'trash' ) ) {
 			return true;
 		}
 	}

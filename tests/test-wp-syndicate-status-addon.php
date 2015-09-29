@@ -320,6 +320,71 @@ class WSSA_Test extends WP_UnitTestCase {
 		$this->assertEquals( 'create', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
 		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
 	}
+	
+	/**
+	 * @記事の更新処理（当該記事のステータスが「非公開(trash)」の場合）
+	 */	
+	public function testUpdateFortrash() {
+		//記事を新規投入 lastpubdate Fri, 26 Aug 2014 12:00:00 +0900
+		$key = 'testUpdateForTrash';
+		$post_id = $this->factory->post->create(array('post_type' => 'wp-syndicate', 'post_name' => $key));
+		$this->add_post_meta($post_id, $this->feed['create-100']);
+		$this->action->import($post_id);
+		$posts = get_posts( array('posts_per_page' => 50) );
+		$post = get_page_by_path( sanitize_title($key.'_100'), OBJECT, 'post' );
+		
+		$this->assertEquals( 1, count($posts) );
+		$this->assertEquals( 'create-100', $post->post_title );
+		$this->assertEquals( 'publish', $post->post_status );
+		$this->assertEquals( 'create', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
+		
+		//記事をゴミ箱(trash)へ変更
+		wp_update_post( array( 'ID' => $post->ID, 'post_title' => 'trash-100', 'post_status' => 'trash' ) );
+		$posts = get_posts( array('posts_per_page' => 50, 'post_status' => 'trash') );
+		$post = get_page_by_path( sanitize_title($key.'_100'), OBJECT, 'post' );
+
+		$this->assertEquals( 1, count($posts) );
+		$this->assertEquals( 'trash-100', $post->post_title );
+		$this->assertEquals( 'trash', $post->post_status );
+		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
+		
+		//statusが'update'の場合 ⇒ 何もしない lastpubdate Fri, 26 Aug 2014 13:00:00 +0900
+		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['update-100'] );
+		$this->action->import($post_id);
+		$posts = get_posts( array('posts_per_page' => 50, 'post_status' => 'trash') );
+		$post = get_page_by_path( sanitize_title($key.'_100'), OBJECT, 'post' );
+		
+		$this->assertEquals( 1, count($posts) );
+		$this->assertEquals( 'trash-100', $post->post_title );
+		$this->assertEquals( 'trash', $post->post_status );
+		$this->assertEquals( 'create', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
+
+		//statusが'create'の場合 ⇒ 何もしない lastpubdate Fri, 26 Aug 2014 14:00:00 +0900
+		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['create-100-2'] );
+		$this->action->import($post_id);
+		$posts = get_posts( array('posts_per_page' => 50, 'post_status' => 'trash') );
+		$post = get_page_by_path( sanitize_title($key.'_100'), OBJECT, 'post' );
+
+		$this->assertEquals( 1, count($posts) );
+		$this->assertEquals( 'trash-100', $post->post_title );
+		$this->assertEquals( 'trash', $post->post_status );
+		$this->assertEquals( 'create', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
+		
+		//statusが存在しない場合 ⇒ statusが'update'の場合と同様の処理 lastpubdate Fri, 26 Aug 2014 15:00:00 +0900
+		update_post_meta( $post_id, 'wp_syndicate-feed-url', $this->feed['no-status-100'] );
+		$this->action->import($post_id);
+		$posts = get_posts( array('posts_per_page' => 50, 'post_status' => 'trash') );
+		$post = get_page_by_path( sanitize_title($key.'_100'), OBJECT, 'post' );
+		
+		$this->assertEquals( 1, count($posts) );
+		$this->assertEquals( 'trash-100', $post->post_title );
+		$this->assertEquals( 'trash', $post->post_status );
+		$this->assertEquals( 'create', get_post_meta( $post->ID, 'wp_syndicate_status', true ) );
+		$this->assertEquals( 'Fri, 26 Aug 2014 12:00:00 +0900', get_post_meta( $post->ID, 'wp_syndicate_lastpubdate', true ) );
+	}
 
 	function add_post_meta( $post_id, $feed_url ) {
 		add_post_meta( $post_id, 'wp_syndicate-feed-url', $feed_url );
