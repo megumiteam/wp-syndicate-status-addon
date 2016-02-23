@@ -95,7 +95,7 @@ add_action( 'wp_syndicate_save_post', function( $update_post_id, $item ){
 		update_post_meta( $update_post_id, 'wp_syndicate_lastpubdate_time', strtotime($lastpubdate[0]['data']) );
 	} else {
 		update_post_meta( $update_post_id, 'wp_syndicate_lastpubdate', mysql2date('D, d M Y H:i:s +0900', date_i18n('Y-m-d H:i:s'), false) );
-		update_post_meta( $update_post_id, 'wp_syndicate_lastpubdate_time', intval(date_i18n("U") );
+		update_post_meta( $update_post_id, 'wp_syndicate_lastpubdate_time', intval(date_i18n("U")) );
 	}
 	
 }, 10, 2 );
