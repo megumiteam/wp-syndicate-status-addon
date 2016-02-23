@@ -13,6 +13,7 @@ function _manually_load_dependencies()
 	$local_plugin_directory = dirname( dirname( dirname( __FILE__ ) ) );
 
 	$dependencies = require __DIR__ . '/dependencies-array.php';
+var_dump(dirname( __FILE__ ));
 var_dump($local_plugin_directory);
 var_dump($dependencies);
 	foreach ( $dependencies as $k => $dependency ){
