@@ -57,6 +57,7 @@ add_filter( 'wp_syndicate_is_skip', function( $is_skip, $item, $updated, $set_po
 			update_post_meta( $set_post_id, 'wp_syndicate_status', 'delete' );
 			wp_update_post( array( 'ID' => $set_post_id, 'post_status' => 'private' ) );
 			update_post_meta( $set_post_id, 'wp_syndicate_lastpubdate', $lastpubdate[0]['data'] );
+			update_post_meta( $set_post_id, 'wp_syndicate_lastpubdate_time', strtotime($lastpubdate[0]['data']) );
 		}
 		return true;
 	}
@@ -91,8 +92,10 @@ add_action( 'wp_syndicate_save_post', function( $update_post_id, $item ){
 		&& !empty($lastpubdate[0]['data']) && strptime( $lastpubdate[0]['data'], '%a, %d %b %Y %H:%M:%S +0900' ) 
 		&& intval(date_i18n("U")) >= strtotime($lastpubdate[0]['data'])) {
 		update_post_meta( $update_post_id, 'wp_syndicate_lastpubdate', $lastpubdate[0]['data'] );
+		update_post_meta( $update_post_id, 'wp_syndicate_lastpubdate_time', strtotime($lastpubdate[0]['data']) );
 	} else {
 		update_post_meta( $update_post_id, 'wp_syndicate_lastpubdate', mysql2date('D, d M Y H:i:s +0900', date_i18n('Y-m-d H:i:s'), false) );
+		update_post_meta( $update_post_id, 'wp_syndicate_lastpubdate_time', intval(date_i18n("U") );
 	}
 	
 }, 10, 2 );
